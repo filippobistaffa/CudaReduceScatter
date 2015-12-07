@@ -40,6 +40,6 @@
 #include "common.h"
 #include "preprocess.h"
 
-void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum);
+void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum, size_t *transfer, size_t *preprocess);
 
 #endif /* REDUCESCATTER_H_ */

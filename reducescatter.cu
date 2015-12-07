@@ -50,7 +50,7 @@ __global__ void reducescatter(value *v1d, value *v2d, value *sep, uint n1, uint 
 	}
 }
 
-void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum) {
+void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum, size_t *transfer, size_t *preprocess) {
 
 	//printbuf(f1->vars, f1->m, "f1->vars");
 	//print(f1);
@@ -59,10 +59,14 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	//printbuf(sep->vars, sep->m, "sep->vars");
 	//print(sep);
 
+	struct timeval t1, t2;
 	chunk c1, c2;
+	gettimeofday(&t1, NULL);
 	sharedmasks(f1, &c1, f2, &c2);
 	shared2most(f1, c1);
 	reordershared(f1, f2);
+	gettimeofday(&t2, NULL);
+	(*preprocess) += (t2.tv_usec - t1.tv_usec) / 1e3 + (t2.tv_sec - t1.tv_sec) * 1e3;
 
 	//printbuf(f1->vars, f1->m, "f1->vars");
 	//print(f1);
@@ -86,6 +90,7 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	for (dim i = 0; i < ns - 1; i++) blocks[i] = MAXBLOCKS;
 	blocks[ns - 1] = (sep->n % MAXBLOCKS) ? (sep->n % MAXBLOCKS) : MAXBLOCKS;
 	//printbuf(blocks, ns, "Blocks");
+	gettimeofday(&t1, NULL);
 
 	for (dim i = 0; i < ns; i++) {
 		cudaStreamCreate(streams + i);
@@ -93,6 +98,9 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 		cudaMemcpyAsync(v2d + i * MAXBLOCKS * n2, f2->v + i * MAXBLOCKS * n2, sizeof(value) * n2 * blocks[i], cudaMemcpyHostToDevice, streams[i]);
 		cudaMemcpyAsync(sd + i * MAXBLOCKS, sep->v + i * MAXBLOCKS, sizeof(value) * blocks[i], cudaMemcpyHostToDevice, streams[i]);
 	}
+
+	gettimeofday(&t2, NULL);
+	(*transfer) += (t2.tv_usec - t1.tv_usec) / 1e3 + (t2.tv_sec - t1.tv_sec) * 1e3;
 
 	for (dim i = 0; i < ns; i++)
 		reducescatter<<<blocks[i], THREADS, 0, streams[i]>>>(v1d + MAXBLOCKS * i * n1, v2d + MAXBLOCKS * i * n2, sd + MAXBLOCKS * i, n1, n2);
@@ -119,11 +127,14 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	cudaMemcpy(sepsum, sepsumd, sizeof(value), cudaMemcpyDeviceToHost);
 	cudaFree(sepsumd);
 
+	gettimeofday(&t1, NULL);
 	for (dim i = 0; i < ns; i++) {
 		cudaMemcpyAsync(f2->v + i * MAXBLOCKS * n2, v2d + i * MAXBLOCKS * n2, sizeof(value) * n2 * blocks[i], cudaMemcpyDeviceToHost, streams[i]);
 		cudaMemcpyAsync(sep->v + i * MAXBLOCKS, sd + i * MAXBLOCKS, sizeof(value) * blocks[i], cudaMemcpyDeviceToHost, streams[i]);
 	}
 
+	gettimeofday(&t2, NULL);
+	(*transfer) += (t2.tv_usec - t1.tv_usec) / 1e3 + (t2.tv_sec - t1.tv_sec) * 1e3;
 	CubDebugExit(cudaPeekAtLastError());
 	CubDebugExit(cudaDeviceSynchronize());
 	cudaFree(v1d);

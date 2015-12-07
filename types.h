@@ -10,7 +10,7 @@ typedef uint_fast64_t chunk;
 
 typedef unsigned dim;
 typedef unsigned id;
-#define MAXVAR 1000
+#define MAXVAR 1100
 
 typedef double value;
 

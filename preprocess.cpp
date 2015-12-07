@@ -50,7 +50,7 @@ void shared2most(func *f, chunk m) {
 	int3 p[n = __builtin_popcountll(o)];
 	uint2 d[n];
 
-	#ifdef CUDAMALLOCHOST
+	#ifdef PINNED
 	value *vt;
 	cudaMallocHost((void **)&vt, sizeof(value) * f->n);
 	#else
@@ -74,7 +74,7 @@ void shared2most(func *f, chunk m) {
 	#pragma omp parallel for private(i)
 	for (i = 0; i < f->n; i++) vt[swapcolumns(i, p, d, n)] = f->v[i];
 
-	#ifdef CUDAMALLOCHOST
+	#ifdef PINNED
 	cudaFreeHost(f->v);
 	#else
 	free(f->v);
@@ -85,7 +85,7 @@ void shared2most(func *f, chunk m) {
 
 void reordershared(func *f1, func *f2) {
 
-	#ifdef CUDAMALLOCHOST
+	#ifdef PINNED
 	value *vt;
 	cudaMallocHost((void **)&vt, sizeof(value) * f2->n);
 	#else
@@ -114,7 +114,7 @@ void reordershared(func *f1, func *f2) {
 	#pragma omp parallel for private(i)
 	for (i = 0; i < f2->n; i++) vt[swapcolumns(i, p, d, f2->s)] = f2->v[i];
 
-	#ifdef CUDAMALLOCHOST
+	#ifdef PINNED
 	cudaFreeHost(f2->v);
 	#else
 	free(f2->v);

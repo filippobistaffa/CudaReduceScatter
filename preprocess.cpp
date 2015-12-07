@@ -5,7 +5,7 @@
 
 template <typename type>
 __attribute__((always_inline))
-inline type power(dim base, unsigned exp) {
+inline type power(type base, unsigned exp) {
 
 	register type result = 1;
 	while (exp) {

@@ -105,6 +105,7 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	for (dim i = 0; i < ns; i++)
 		reducescatter<<<blocks[i], THREADS, 0, streams[i]>>>(v1d + MAXBLOCKS * i * n1, v2d + MAXBLOCKS * i * n2, sd + MAXBLOCKS * i, n1, n2);
 
+	#ifdef TABLESUM
 	value *f2sumd;
 	cudaMalloc(&f2sumd, sizeof(value));
 	void *ts = NULL;
@@ -126,6 +127,7 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	cudaFree(ts);
 	cudaMemcpy(sepsum, sepsumd, sizeof(value), cudaMemcpyDeviceToHost);
 	cudaFree(sepsumd);
+	#endif
 
 	gettimeofday(&t1, NULL);
 	for (dim i = 0; i < ns; i++) {

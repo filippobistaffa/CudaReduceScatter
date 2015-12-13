@@ -12,12 +12,18 @@
 
 #ifdef __CUDACC__ // CUDA
 
-#define MAXBLOCKS (1024 * 1024)
 //#define ALGORITHM BLOCK_REDUCE_RAKING
 //#define ALGORITHM BLOCK_REDUCE_WARP_REDUCTIONS
 #define ALGORITHM BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY
 #define VECTORIZED
-#define THREADS 128
+#define THREADS 32
+#define TABLESUM
+#define MEASURETIME
+//define STREAMS
+
+#ifdef STREAMS
+#define MAXBLOCKS (1024 * 1024)
+#endif
 
 #define CUB_STDERR
 #include "cub/util_device.cuh"
@@ -40,6 +46,6 @@
 #include "common.h"
 #include "preprocess.h"
 
-void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum, size_t *transfer, size_t *preprocess);
+void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f2sum, value *sepsum, float *transfer, float *preprocess, float *reducescatter);
 
 #endif /* REDUCESCATTER_H_ */

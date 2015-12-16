@@ -156,8 +156,6 @@ void updatepotential(func *f1, func *f2, func *sep, const dim *domains, value *f
 	#endif
 	#endif
 
-	gettimeofday(&t1, NULL);
-
 	#ifdef STREAMS
 	for (dim i = 0; i < ns; i++) {
 		cudaMemcpyAsync(f2->v + i * MAXBLOCKS * n2, v2d + i * MAXBLOCKS * n2, sizeof(value) * n2 * blocks[i], cudaMemcpyDeviceToHost, streams[i]);
